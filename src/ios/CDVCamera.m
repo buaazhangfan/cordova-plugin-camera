@@ -81,10 +81,12 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
-
+    
+    pictureOptions.cardScan = [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
+    
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
-
+    
     return pictureOptions;
 }
 
@@ -421,8 +423,10 @@ static NSString* toBase64(NSData* data) {
         image = [image imageCorrectedForCaptureOrientation];
     }
     
-    image = [image imageByCropping];
-
+    if (options.cardScan) {
+        image = [image imageByCropping];
+    }
+    
     UIImage* scaledImage = nil;
 
     if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
@@ -433,7 +437,7 @@ static NSString* toBase64(NSData* data) {
             scaledImage = [image imageByScalingNotCroppingForSize:options.targetSize];
         }
     }
-//    return croppedImage;
+    
     return (scaledImage == nil ? image : scaledImage);
 }
 
@@ -757,28 +761,34 @@ static NSString* toBase64(NSData* data) {
     cameraPicker.allowsEditing = pictureOptions.allowsEditing;
     
     if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
-        CGSize screenSize = [[UIScreen mainScreen] bounds].size;
-        CGFloat width = screenSize.width;
-        CGFloat height = screenSize.height;
-        CGFloat previewRatio = 4.0 / 3.0;
-        CGFloat previewHeight = width * previewRatio;
-        CGFloat heightScale = height / previewHeight;
-        OverlayView *overlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0 - 51, width, previewHeight) isPreview:false];
-        OverlayView *previewOverlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0, width, previewHeight) isPreview:true];
-        // We only allow taking pictures (no video) in this API.
-        cameraPicker.navigationBarHidden = YES;
-        cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
-        cameraPicker.cameraOverlayView = overlay;
-        // We can only set the camera device if we're actually using the camera.
-        cameraPicker.cameraDevice = pictureOptions.cameraDirection;
-        [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidCaptureItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
-            NSLog(@"image captured");
-            cameraPicker.cameraOverlayView = previewOverlay;
-        }];
-        [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidRejectItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
-            NSLog(@"retake pressed");
+        if (pictureOptions.cardScan) {
+            // We only allow taking pictures (no video) in this API.
+            cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
+            // We can only set the camera device if we're actually using the camera.
+            cameraPicker.cameraDevice = pictureOptions.cameraDirection;
+            CGSize screenSize = [[UIScreen mainScreen] bounds].size;
+            CGFloat width = screenSize.width;
+            CGFloat height = screenSize.height;
+            CGFloat previewRatio = 4.0 / 3.0;
+            CGFloat previewHeight = width * previewRatio;
+            OverlayView *overlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0 - 51, width, previewHeight) isPreview:false];
+            OverlayView *previewOverlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0, width, previewHeight) isPreview:true];
+            cameraPicker.navigationBarHidden = YES;
             cameraPicker.cameraOverlayView = overlay;
-        }];
+            [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidCaptureItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
+                NSLog(@"image captured");
+                cameraPicker.cameraOverlayView = previewOverlay;
+            }];
+            [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidRejectItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
+                NSLog(@"retake pressed");
+                cameraPicker.cameraOverlayView = overlay;
+            }];
+        } else {
+            // We only allow taking pictures (no video) in this API.
+            cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
+            // We can only set the camera device if we're actually using the camera.
+            cameraPicker.cameraDevice = pictureOptions.cameraDirection;
+        }
     } else if (pictureOptions.mediaType == MediaTypeAll) {
         cameraPicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:cameraPicker.sourceType];
     } else {
@@ -852,7 +862,7 @@ static NSString* toBase64(NSData* data) {
         self.mView.alpha = 1.0;
     }
 }
-- (id)initWithFrame:(CGRect)frame isPreview: (Boolean)option {
+- (id)initWithFrame:(CGRect)frame isPreview: (BOOL)option {
     if (self = [super initWithFrame:frame]) {
         self.isPreview = option;
         self.backgroundColor = [UIColor clearColor];

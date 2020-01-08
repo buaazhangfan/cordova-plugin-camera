@@ -60,6 +60,8 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
 
+@property (assign) BOOL cardScan;
+
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command;
 
 @end
@@ -119,9 +121,9 @@ typedef NSUInteger CDVMediaType;
 @interface OverlayView: UIView {}
 
 @property (nonatomic, strong)UIView *mView;
-@property (nonatomic) Boolean isPreview;
+@property (nonatomic) BOOL isPreview;
 @property (nonatomic, strong)UILabel *tipLabel;
 
-- (id)initWithFrame:(CGRect)frame isPreview: (Boolean)option;
+- (id)initWithFrame:(CGRect)frame isPreview: (BOOL)option;
 - (void)addTextUI: (NSString*)text pos: (CGRect)position;
 @end
