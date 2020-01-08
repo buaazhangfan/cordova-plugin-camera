@@ -192,7 +192,6 @@ static NSString* toBase64(NSData* data) {
     cameraPicker.callbackId = callbackId;
     // we need to capture this state for memory warnings that dealloc this object
     cameraPicker.webView = self.webView;
-
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
         // If a popover is already open, close it; we only want one at a time.
@@ -398,12 +397,11 @@ static NSString* toBase64(NSData* data) {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
     NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
     NSString* filePath;
-    
-    // unique file name
-    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+
+    // generate unique file name
+    int i = 1;
     do {
-        filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
+        filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
 
     return filePath;
@@ -422,6 +420,8 @@ static NSString* toBase64(NSData* data) {
     if (options.correctOrientation) {
         image = [image imageCorrectedForCaptureOrientation];
     }
+    
+    image = [image imageByCropping];
 
     UIImage* scaledImage = nil;
 
@@ -433,7 +433,7 @@ static NSString* toBase64(NSData* data) {
             scaledImage = [image imageByScalingNotCroppingForSize:options.targetSize];
         }
     }
-
+//    return croppedImage;
     return (scaledImage == nil ? image : scaledImage);
 }
 
@@ -755,12 +755,30 @@ static NSString* toBase64(NSData* data) {
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
     cameraPicker.allowsEditing = pictureOptions.allowsEditing;
-
+    
     if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
+        CGSize screenSize = [[UIScreen mainScreen] bounds].size;
+        CGFloat width = screenSize.width;
+        CGFloat height = screenSize.height;
+        CGFloat previewRatio = 4.0 / 3.0;
+        CGFloat previewHeight = width * previewRatio;
+        CGFloat heightScale = height / previewHeight;
+        OverlayView *overlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0 - 51, width, previewHeight) isPreview:false];
+        OverlayView *previewOverlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0, width, previewHeight) isPreview:true];
         // We only allow taking pictures (no video) in this API.
+        cameraPicker.navigationBarHidden = YES;
         cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
+        cameraPicker.cameraOverlayView = overlay;
         // We can only set the camera device if we're actually using the camera.
         cameraPicker.cameraDevice = pictureOptions.cameraDirection;
+        [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidCaptureItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
+            NSLog(@"image captured");
+            cameraPicker.cameraOverlayView = previewOverlay;
+        }];
+        [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidRejectItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
+            NSLog(@"retake pressed");
+            cameraPicker.cameraOverlayView = overlay;
+        }];
     } else if (pictureOptions.mediaType == MediaTypeAll) {
         cameraPicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:cameraPicker.sourceType];
     } else {
@@ -769,6 +787,88 @@ static NSString* toBase64(NSData* data) {
     }
 
     return cameraPicker;
+}
+
+@end
+
+@implementation OverlayView
+
+#define kLineWidth 5
+#define kLineLong 35
+#define kLineMargin 20
+#define kWidth   [UIScreen mainScreen].bounds.size.width
+#define kHeight  [UIScreen mainScreen].bounds.size.height
+#define kRatio 3./4.
+
+- (void)drawRect:(CGRect)rect {
+    UIColor *color = UIColor.redColor;
+    [color set];
+    UIBezierPath *bpath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height) cornerRadius:0];
+    CGFloat rectWidth = kWidth * 3. / 4.;
+    CGFloat rectHeight = rectWidth * 9. / 16.;
+    CGPoint rectOrigin = CGPointMake(self.frame.size.width / 2. - rectWidth / 2., self.frame.size.height / 2. - rectHeight / 2.);
+    [bpath appendPath:[[UIBezierPath bezierPathWithRoundedRect:CGRectMake(rectOrigin.x - 10, rectOrigin.y - 50, rectWidth + 20 , rectHeight + 100) cornerRadius:0] bezierPathByReversingPath]];
+
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    
+    // Top left
+    [path moveToPoint:CGPointMake(rectOrigin.x, rectOrigin.y + kLineLong)];
+    [path addLineToPoint:CGPointMake(rectOrigin.x, rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectOrigin.x + kLineLong, rectOrigin.y)];
+    path.lineWidth = kLineWidth;
+    
+    // Bottom left
+    [path moveToPoint:CGPointMake(rectOrigin.x, rectHeight + rectOrigin.y - kLineLong)];
+    [path addLineToPoint:CGPointMake(rectOrigin.x, rectHeight + rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectOrigin.x + kLineLong, rectHeight + rectOrigin.y)];
+    path.lineWidth = kLineWidth;
+    
+    // Top right
+    [path moveToPoint:CGPointMake(rectWidth + rectOrigin.x - kLineLong, rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectWidth + rectOrigin.x, rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectWidth + rectOrigin.x, rectOrigin.y + kLineLong)];
+    path.lineWidth = kLineWidth;
+    
+    // Bottom right
+    [path moveToPoint:CGPointMake(rectWidth + rectOrigin.x - kLineLong, rectHeight + rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectWidth + rectOrigin.x, rectHeight + rectOrigin.y)];
+    [path addLineToPoint:CGPointMake(rectWidth + rectOrigin.x, rectHeight + rectOrigin.y - kLineLong)];
+    path.lineWidth = kLineWidth;
+    
+    UIBezierPath *previewPath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height) cornerRadius:0];
+    [previewPath appendPath:[[UIBezierPath bezierPathWithRoundedRect:CGRectMake(rectOrigin.x, rectOrigin.y, rectWidth, rectHeight) cornerRadius:0] bezierPathByReversingPath]];
+
+    
+    if (!self.isPreview) {
+        [self addTextUI:@"Please put the card inside the brackets" pos:CGRectMake(rectOrigin.x, rectOrigin.y - 40, rectWidth, 20)];
+        CAShapeLayer *shapeLayer = [CAShapeLayer layer];
+        shapeLayer.path = bpath.CGPath;
+        self.mView.layer.mask = shapeLayer;
+        [path stroke];
+    } else {
+        CAShapeLayer *previewShapeLayer = [CAShapeLayer layer];
+        previewShapeLayer.path = previewPath.CGPath;
+        self.mView.layer.mask = previewShapeLayer;
+        self.mView.alpha = 1.0;
+    }
+}
+- (id)initWithFrame:(CGRect)frame isPreview: (Boolean)option {
+    if (self = [super initWithFrame:frame]) {
+        self.isPreview = option;
+        self.backgroundColor = [UIColor clearColor];
+        self.mView = [[UIView alloc] initWithFrame:self.bounds];
+        self.mView.backgroundColor = [UIColor blackColor];
+        self.mView.alpha = 0.8;
+        [self addSubview:self.mView];
+    }
+    
+    return self;
+}
+
+- (void)addTextUI:(NSString*)text pos:(CGRect)position {
+    self.tipLabel = [[UILabel alloc] initWithFrame:position];
+    self.tipLabel.text = text;
+    [self addSubview:self.tipLabel];
 }
 
 @end

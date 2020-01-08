@@ -114,3 +114,14 @@ typedef NSUInteger CDVMediaType;
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error;
 
 @end
+
+// customized image pick controller view interface
+@interface OverlayView: UIView {}
+
+@property (nonatomic, strong)UIView *mView;
+@property (nonatomic) Boolean isPreview;
+@property (nonatomic, strong)UILabel *tipLabel;
+
+- (id)initWithFrame:(CGRect)frame isPreview: (Boolean)option;
+- (void)addTextUI: (NSString*)text pos: (CGRect)position;
+@end

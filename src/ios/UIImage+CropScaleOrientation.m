@@ -172,4 +172,20 @@
     return newImage;
 }
 
+- (UIImage*) imageByCropping {
+    UIImage* sourceImage = self;
+    UIImage* newImage = nil;
+    CGSize imageSize = sourceImage.size;
+    CGFloat width = imageSize.width;
+    CGFloat height = imageSize.height;
+    CGFloat cropWidth = width * 3. / 4.;
+    CGFloat cropHeight = cropWidth * 9. / 16.;
+    CGPoint center = CGPointMake(width / 2. - cropWidth / 2., height / 2. - cropHeight / 2.);
+    CGRect frame = CGRectMake(center.x, center.y, cropWidth, cropHeight);
+    CGImageRef imageRef = CGImageCreateWithImageInRect([sourceImage CGImage], frame);
+    newImage = [UIImage imageWithCGImage:imageRef];
+    CGImageRelease(imageRef);
+    return newImage;
+}
+
 @end
