@@ -767,11 +767,14 @@ static NSString* toBase64(NSData* data) {
             // We can only set the camera device if we're actually using the camera.
             cameraPicker.cameraDevice = pictureOptions.cameraDirection;
             CGSize screenSize = [[UIScreen mainScreen] bounds].size;
+            CGFloat offset = 10.0;
             CGFloat width = screenSize.width;
             CGFloat height = screenSize.height;
             CGFloat previewRatio = 4.0 / 3.0;
             CGFloat previewHeight = width * previewRatio;
-            OverlayView *overlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0 - 51, width, previewHeight) isPreview:false];
+            CGSize navigationBarSize = [cameraPicker navigationBar].frame.size;
+            CGFloat overlayOffset = navigationBarSize.height + offset;
+            OverlayView *overlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0 - overlayOffset, width, previewHeight + offset) isPreview:false];
             OverlayView *previewOverlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0, width, previewHeight) isPreview:true];
             cameraPicker.navigationBarHidden = YES;
             cameraPicker.cameraOverlayView = overlay;
