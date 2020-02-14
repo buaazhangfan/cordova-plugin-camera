@@ -85,7 +85,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.cardScan = [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
     
     pictureOptions.popoverSupported = NO;
-    pictureOptions.usesGeolocation = NO;
+    pictureOptions.usesGeolocation = YES;
     
     return pictureOptions;
 }
@@ -881,6 +881,8 @@ static NSString* toBase64(NSData* data) {
 - (void)addTextUI:(NSString*)text pos:(CGRect)position {
     self.tipLabel = [[UILabel alloc] initWithFrame:position];
     self.tipLabel.text = text;
+    self.tipLabel.textColor = UIColor.whiteColor;
+    self.tipLabel.adjustsFontSizeToFitWidth = YES;
     [self addSubview:self.tipLabel];
 }
 
