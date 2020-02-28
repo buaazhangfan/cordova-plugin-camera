@@ -853,7 +853,7 @@ static NSString* toBase64(NSData* data) {
 
     
     if (!self.isPreview) {
-        [self addTextUI:@"Please put the card inside the brackets" pos:CGRectMake(rectOrigin.x, rectOrigin.y - 40, rectWidth, 20)];
+        [self addTextUI:@"Place card within angular bracket and take photo" pos:CGRectMake(rectOrigin.x, rectOrigin.y - 40, rectWidth, 20)];
         CAShapeLayer *shapeLayer = [CAShapeLayer layer];
         shapeLayer.path = bpath.CGPath;
         self.mView.layer.mask = shapeLayer;
