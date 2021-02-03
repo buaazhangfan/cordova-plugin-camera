@@ -8,6 +8,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.List;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private final String TAG = "CameraPreview";
@@ -27,6 +28,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
         try {
             Camera.Parameters params = mCamera.getParameters();
+
+            List<Camera.Size> sizes = params.getSupportedPictureSizes();
+            Camera.Size mSize = null;
+            for (Camera.Size size : sizes) {
+                mSize = size;
+            }
+
             if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
                 params.set("orientation", "portrait");
                 mCamera.setDisplayOrientation(90);
@@ -37,6 +45,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 params.setRotation(0);
             }
 
+            params.setPictureSize(mSize.width, mSize.height);
             mCamera.setParameters(params);
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
@@ -46,7 +55,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        mCamera.stopPreview();
+        mCamera.release();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
@@ -57,7 +67,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             mCamera.stopPreview();
         } catch (Exception e) {
-
+            Log.e(TAG, "Error stop camera preview: " + e.getMessage());
         }
 
         try {

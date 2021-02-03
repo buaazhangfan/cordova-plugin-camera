@@ -9,17 +9,17 @@
     <FrameLayout
         android:id="@+id/camera_preview"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/button"/>
 
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginStart="158dp"
-        android:layout_marginTop="661dp"
+
+        android:onClick="captureImage"
         android:text="Capture" />
 
 </RelativeLayout>
