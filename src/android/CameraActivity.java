@@ -24,22 +24,22 @@ public class CameraActivity extends Activity {
     private ContentResolver mContentResolver;
     private Uri mSaveUri;
 
-    Camera camera;
-    FrameLayout frameLayout;
-    CameraPreview mPreview;
+    private Camera mCamera;
+    private FrameLayout mFrameLayout;
+    private CameraPreview mPreview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContentResolver = getContentResolver();
         setContentView(R.layout.activity_camera);
-        frameLayout = (FrameLayout) findViewById(R.id.camera_preview);
+        mFrameLayout = (FrameLayout) findViewById(R.id.camera_preview);
 
-        camera = Camera.open();
+        mCamera = Camera.open();
 
-        mPreview = new CameraPreview(this, camera);
+        mPreview = new CameraPreview(this, mCamera);
 
-        frameLayout.addView(mPreview);
+        mFrameLayout.addView(mPreview);
 
 
     }
@@ -73,8 +73,8 @@ public class CameraActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        if (camera == null) {
-            camera = Camera.open();
+        if (mCamera == null) {
+            mCamera = Camera.open();
         }
     }
 
@@ -85,17 +85,24 @@ public class CameraActivity extends Activity {
     }
 
     public void captureImage(View v) {
-        if (camera != null) {
-            camera.takePicture(null, null, mPictureCallback);
+        if (mCamera != null) {
+            mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                @Override
+                public void onAutoFocus(boolean success, Camera camera) {
+                    if (success) {
+                        mCamera.takePicture(null, null, mPictureCallback);
+                    }
+                }
+            });
         }
     }
 
     private void releaseCamera() {
-        if (camera != null) {
-            camera.stopPreview();
-            camera.setPreviewCallback(null);
-            camera.release();
-            camera = null;
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.setPreviewCallback(null);
+            mCamera.release();
+            mCamera = null;
         }
     }
 
