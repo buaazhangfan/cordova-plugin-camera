@@ -6,11 +6,41 @@
     android:layout_height="match_parent"
     tools:context="org.apache.cordova.camera.CameraActivity">
 
-    <FrameLayout
-        android:id="@+id/camera_preview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_above="@+id/button"/>
+    <RelativeLayout
+        android:id="@+id/outerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/textOverlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/standard_padding"
+            android:layout_centerHorizontal="true"
+            android:textColor="#FFFFFF"/>
+
+        <FrameLayout
+            android:id="@+id/camera_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </FrameLayout>
+
+        <org.apache.cordova.camera.ViewPort
+            android:id="@+id/overlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/camera_preview"
+            android:layout_alignEnd="@id/camera_preview"
+            android:layout_alignTop="@id/camera_preview"
+            android:layout_alignBottom="@id/camera_preview"
+            android:layout_weight=".5"
+            android:background="#7f000000">
+
+        </org.apache.cordova.camera.ViewPort>
+
+
+    </RelativeLayout>
 
     <Button
         android:id="@+id/button"

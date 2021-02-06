@@ -7,8 +7,12 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.oraclecorp.internal.cxm.salescloud.R;
 
@@ -27,13 +31,21 @@ public class CameraActivity extends Activity {
     private Camera mCamera;
     private FrameLayout mFrameLayout;
     private CameraPreview mPreview;
+    private TextView mText;
+    private ViewPort mViewPort;
+    private RelativeLayout mRelativeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContentResolver = getContentResolver();
         setContentView(R.layout.activity_camera);
-        mFrameLayout = (FrameLayout) findViewById(R.id.camera_preview);
+        mRelativeLayout = findViewById(R.id.outerLayout);
+        mFrameLayout = findViewById(R.id.camera_preview);
+        mViewPort = findViewById(R.id.overlay);
+        mText = findViewById(R.id.textOverlay);
+        mText.setText("Place the card inside the rectangular area");
+        mText.bringToFront();
 
         mCamera = Camera.open();
 
@@ -105,6 +117,5 @@ public class CameraActivity extends Activity {
             mCamera = null;
         }
     }
-
 
 }
