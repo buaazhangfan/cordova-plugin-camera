@@ -17,7 +17,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private List<Camera.Size> mSupportedPreviewSizes;
+    private List<Camera.Size> mSupportedPictureSizes;
     private Camera.Size mPreviewSize;
+    private Camera.Size mPictureSize;
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
@@ -26,6 +28,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // supported preview sizes
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
+        mSupportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
 
         mHolder = getHolder();
         mHolder.addCallback(this);
@@ -53,6 +56,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             }
 
             params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+            params.setPictureSize(mPictureSize.width, mPictureSize.height);
             mCamera.setParameters(params);
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
@@ -91,6 +95,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         if (mSupportedPreviewSizes != null) {
             mPreviewSize = Util.getOptimalPreiewSize(mSupportedPreviewSizes, width, height);
+        }
+
+        if (mSupportedPictureSizes != null) {
+            mPictureSize = Util.getOptimalPreiewSize(mSupportedPictureSizes, width, height);
         }
 
         if (mPreviewSize != null) {

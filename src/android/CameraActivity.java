@@ -3,6 +3,7 @@ package org.apache.cordova.camera;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
@@ -66,8 +67,12 @@ public class CameraActivity extends Activity {
             if (mSaveUri != null) {
                 OutputStream outputStream = null;
                 try {
+                    double frameLayoutRatio = (double)mFrameLayout.getHeight() / (double)mFrameLayout.getWidth();
+                    Bitmap bitmap = Util.getBitMapfromByte(data);
+                    Bitmap cropmap = Util.centerCrop(bitmap, frameLayoutRatio);
+                    byte[] cropdata = Util.getBytefromBitMap(cropmap);
                     outputStream = mContentResolver.openOutputStream(mSaveUri);
-                    outputStream.write(data);
+                    outputStream.write(cropdata);
                     outputStream.close();
 
                     setResult(RESULT_OK);
