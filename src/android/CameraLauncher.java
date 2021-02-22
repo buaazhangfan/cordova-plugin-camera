@@ -22,6 +22,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -39,6 +40,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Base64;
+
+import com.oraclecorp.internal.cxm.salescloud.MainActivity;
 
 import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;
@@ -74,6 +77,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
     private static final int CAMERA = 1;                // Take picture from camera
     private static final int SAVEDPHOTOALBUM = 2;       // Choose image from picture library (same as PHOTOLIBRARY for Android)
+    private static final int SCANCAMERA = 3;
 
     private static final int PICTURE = 0;               // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
     private static final int VIDEO = 1;                 // allow selection of video only, ONLY RETURNS URL
@@ -118,6 +122,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private boolean cardScan;               // Shoule we open camera for card scan
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -156,6 +161,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.encodingType = JPEG;
             this.mediaType = PICTURE;
             this.mQuality = 50;
+            this.cardScan = false;
 
             //Take the values from the arguments if they're not already defined (this is tricky)
             this.destType = args.getInt(1);
@@ -168,6 +174,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            this.cardScan = args.getBoolean(12);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -294,9 +301,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     {
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
-
+        Intent intent = null;
         // Let's use the intent and see what happens
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (this.cardScan) {
+            Context context = this.cordova.getActivity().getApplicationContext();
+            intent = new Intent(context, CameraActivity.class);
+        } else {
+            intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        }
 
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
@@ -312,7 +324,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PackageManager mPm = this.cordova.getActivity().getPackageManager();
             if(intent.resolveActivity(mPm) != null)
             {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+                if (this.cardScan) {
+                    this.cordova.startActivityForResult((CordovaPlugin) this, intent, (SCANCAMERA + 1) * 16 + returnType + 1);
+                } else {
+                    this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+                }
             }
             else
             {
@@ -769,7 +785,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         int destType = (requestCode % 16) - 1;
 
         // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
+        if (requestCode == CROP_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
 
                 // Because of the inability to pass through multiple intents, this hack will allow us
@@ -793,7 +809,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         }
         // If CAMERA
-        else if (srcType == CAMERA) {
+        else if (srcType == CAMERA || srcType == SCANCAMERA) {
             // If image available
             if (resultCode == Activity.RESULT_OK) {
                 try {

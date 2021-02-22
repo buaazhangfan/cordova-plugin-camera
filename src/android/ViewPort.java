@@ -14,8 +14,6 @@ import android.view.ViewGroup;
 
 public class ViewPort extends ViewGroup {
 
-    private Camera.Size mPreviewSize;
-
     public float rectTop;
     public float rectLeft;
 
@@ -52,7 +50,6 @@ public class ViewPort extends ViewGroup {
         float top = viewHeight / 2 - rectHeight / 2;
         this.rectLeft = left;
         this.rectTop = top;
-        int viewportMargin = 32;
         int viewportCornerRadius = 8;
         Paint eraser = new Paint();
         eraser.setAntiAlias(true);
