@@ -778,7 +778,7 @@ static NSString* toBase64(NSData* data) {
             OverlayView *previewOverlay = [[OverlayView alloc] initWithFrame:CGRectMake(0, height / 2.0 - previewHeight / 2.0, width, previewHeight) isPreview:true];
             cameraPicker.navigationBarHidden = YES;
             cameraPicker.cameraOverlayView = overlay;
-            cameraPicker.cameraFlashMode = UIImagePickerControllerCameraFlashModeOn;
+            cameraPicker.cameraFlashMode = UIImagePickerControllerCameraFlashModeOff;
             [[NSNotificationCenter defaultCenter] addObserverForName:@"_UIImagePickerControllerUserDidCaptureItem" object:nil queue:nil usingBlock:^(NSNotification *note) {
                 NSLog(@"image captured");
                 cameraPicker.cameraOverlayView = previewOverlay;
