@@ -20,6 +20,7 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     id="cordova-plugin-camera-cxm"
     version="1.1.3">
     <name>Camera</name>
@@ -54,7 +55,10 @@
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-feature android:name="android.hardware.camera" android:required="true" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.FLASHLIGHT" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
@@ -66,6 +70,13 @@
                   android:name="android.support.FILE_PROVIDER_PATHS"
                   android:resource="@xml/camera_provider_paths"/>
           </provider>
+          <activity 
+              android:launchMode="singleTask"
+              android:name="org.apache.cordova.camera.CameraActivity"
+              android:parentActivityName=".MainActivity"
+              android:screenOrientation="portrait"
+              android:theme="@android:style/Theme.Holo.NoActionBar.Fullscreen">
+          </activity>
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
@@ -73,7 +84,21 @@
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
+        <source-file src="src/android/CameraPreview.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/Util.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/ViewPort.java" target-dir="src/org/apache/cordova/camera" />
+        <resource-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
+        <resource-file src="src/android/xml/activity_camera.xml" target-dir="res/layout" />
+        <resource-file src="src/android/drawable/mdpi/btn_camera_shutter_holo.png" target-dir="res/drawable-mdpi" />
+        <resource-file src="src/android/drawable/mdpi/ic_flash_off_holo_light.png" target-dir="res/drawable-mdpi" />
+        <resource-file src="src/android/drawable/mdpi/ic_flash_on_holo_light.png" target-dir="res/drawable-mdpi" />
+        <resource-file src="src/android/drawable/hdpi/btn_camera_shutter_holo.png" target-dir="res/drawable-hdpi" />
+        <resource-file src="src/android/drawable/hdpi/ic_flash_off_holo_light.png" target-dir="res/drawable-hdpi" />
+        <resource-file src="src/android/drawable/hdpi/ic_flash_on_holo_light.png" target-dir="res/drawable-hdpi" />
+        <resource-file src="src/android/drawable/capture_button.xml" target-dir="res/drawable" />
+        <resource-file src="src/android/drawable/flash_off.xml" target-dir="res/drawable" />
+        <resource-file src="src/android/drawable/flash_on.xml" target-dir="res/drawable" />
+
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />

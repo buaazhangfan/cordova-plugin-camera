@@ -87,10 +87,10 @@ public class CameraActivity extends Activity {
         if (fmi == 1) {
             // flash off
             fmi = 0;
-            mFlashButton.setImageResource(R.drawable.ic_flash_on_holo_light);
+            mFlashButton.setImageResource(R.drawable.flash_on);
         } else {
             fmi = 1;
-            mFlashButton.setImageResource(R.drawable.ic_flash_off_holo_light);
+            mFlashButton.setImageResource(R.drawable.flash_off);
         }
 
         params.setFlashMode(flashModes[fmi]);
@@ -162,5 +162,6 @@ public class CameraActivity extends Activity {
             mCamera = null;
         }
     }
+
 
 }
