@@ -1,9 +1,11 @@
 package org.apache.cordova.camera;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.util.Log;
+import android.view.Surface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -33,15 +35,12 @@ public class Util {
         Camera.Size optimalSize = null;
         double minDiff = Double.MAX_VALUE;
 
-        int targetHeight = h;
+        int targetHeight = w;
 
         for (Camera.Size size : sizes) {
             double ratio;
-            if (size.width > size.height) {
-                ratio = (double) size.width / size.height;
-            } else {
-                ratio = (double) size.height / size.width;
-            }
+            ratio = (double) size.width / size.height;
+
             if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
                 continue;
             }
@@ -70,16 +69,18 @@ public class Util {
         return BitmapFactory.decodeByteArray(data, 0, data.length);
     }
 
-    public static Bitmap centerCrop(Bitmap image, double viewRatio) {
+    public static Bitmap centerCrop(Bitmap image, int rotation) {
         int height = image.getHeight();
         int width = image.getWidth();
-        int offset = height - (int)(width * viewRatio);
-        int rectWidth = (int) (width * 3.f / 4.f);
-        int rectHeight = (int) (rectWidth * 9.f / 16.f);
-        int x = (width - rectWidth) / 2;
-        int y = (height - offset - rectHeight) / 2;
 
-        return Bitmap.createBitmap(image, x, y, rectWidth, rectHeight);
+        int rectHeight = (int) (height * 3.f / 4.f);
+        int rectWidth = (int) (rectHeight * 9.f / 16.f);
+        int x = (width - rectWidth) / 2;
+        int y = (height - rectHeight) / 2;
+        Matrix matrix = new Matrix();
+        matrix.setRotate(rotation);
+
+        return Bitmap.createBitmap(image, x, y, rectWidth, rectHeight, matrix, true);
 
     }
 
@@ -89,6 +90,40 @@ public class Util {
         byte[] b = baos.toByteArray();
 
         return b;
+    }
+
+    public static int getBackCameraId() {
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public static int getDisplayOrientation(Activity activity) {
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        switch (rotation) {
+            case Surface.ROTATION_0: return 0;
+            case Surface.ROTATION_90: return 90;
+            case Surface.ROTATION_180: return 180;
+            case Surface.ROTATION_270: return 270;
+        }
+
+        return 0;
+    }
+
+    public static int getCameraOrientation(int cameraId) {
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, info);
+        return info.orientation;
+    }
+
+    public static int getCameraDisplayOrientation(int degrees, int cameraOrientation) {
+        return (cameraOrientation - degrees + 360) % 360;
     }
 
 }

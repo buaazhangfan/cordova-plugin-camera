@@ -1,11 +1,20 @@
 package org.apache.cordova.camera;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.RectF;
 import android.hardware.Camera;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import org.apache.cordova.LOG;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,15 +29,26 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private List<Camera.Size> mSupportedPictureSizes;
     private Camera.Size mPreviewSize;
     private Camera.Size mPictureSize;
+    private Camera.CameraInfo mInfo;
+    private Activity mActivity;
+    private int mDisplayOrientation;
 
-    public CameraPreview(Context context, Camera camera) {
+    public CameraPreview(Context context, Camera camera, int id, Activity activity) {
         super(context);
         mContext = context;
         mCamera = camera;
+        mActivity = activity;
 
-        // supported preview sizes
         mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         mSupportedPictureSizes = mCamera.getParameters().getSupportedPictureSizes();
+
+        mInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(id, mInfo);
+
+        int deviceOrientation = Util.getDisplayOrientation(mActivity);
+        int cameraOrientation = Util.getCameraOrientation(id);
+        mDisplayOrientation = Util.getCameraDisplayOrientation(deviceOrientation, cameraOrientation);
+
 
         mHolder = getHolder();
         mHolder.addCallback(this);
@@ -37,18 +57,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     public void surfaceCreated(SurfaceHolder holder) {
         try {
-            Log.e("actually height", String.valueOf(getHeight()));
             Camera.Parameters params = mCamera.getParameters();
-
             // force the view to be portrait
             if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
                 params.set("orientation", "portrait");
-                mCamera.setDisplayOrientation(90);
-                params.setRotation(90);
+                mCamera.setDisplayOrientation(mDisplayOrientation);
             } else {
                 params.set("orientation", "landscape");
                 mCamera.setDisplayOrientation(0);
-                params.setRotation(0);
             }
 
             if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
@@ -61,7 +77,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
         } catch (IOException e) {
-            Log.e(TAG, "Error setting camera preview: " + e.getMessage());
+            LOG.e(TAG, "Error setting camera preview: " + e.getMessage());
         }
     }
 
@@ -76,14 +92,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             mCamera.stopPreview();
         } catch (Exception e) {
-            Log.e(TAG, "Error stop camera preview: " + e.getMessage());
+            LOG.e(TAG, "Error stop camera preview: " + e.getMessage());
         }
 
         try {
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
         } catch (Exception e) {
-            Log.e(TAG, "Error starting camera preview: " + e.getMessage());
+            LOG.e(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
 
@@ -101,6 +117,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mPictureSize = Util.getOptimalPreiewSize(mSupportedPictureSizes, width, height);
         }
 
+
         if (mPreviewSize != null) {
             float ratio;
             if (mPreviewSize.height >= mPreviewSize.width) {
@@ -114,5 +131,30 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+        super.dispatchDraw(canvas);
+        float viewWidth = (float) getWidth();
+        float viewHeight = (float) getHeight();
+        float rectWidth = (viewWidth * 3.f / 4.f);
+        float rectHeight = (rectWidth * 9.f / 16.f);
+        float left = viewWidth / 2 - rectWidth / 2;
+        float top = viewHeight / 2 - rectHeight / 2;
+        int viewportCornerRadius = 8;
+        Paint eraser = new Paint();
+        eraser.setAntiAlias(true);
+        eraser.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        RectF rect = new RectF(left, top, left + rectWidth, top + rectHeight);
+        RectF frame = new RectF(left - 2.f, top - 2.f, left + rectWidth + 4.f, top + rectHeight + 4.f);
+        Path path = new Path();
+        Paint stroke = new Paint();
+        stroke.setAntiAlias(true);
+        stroke.setStrokeWidth(4);
+        stroke.setColor(Color.WHITE);
+        stroke.setStyle(Paint.Style.STROKE);
+        path.addRoundRect(frame, (float) viewportCornerRadius, (float) viewportCornerRadius, Path.Direction.CW);
+        canvas.drawPath(path, stroke);
+        canvas.drawRoundRect(rect, (float) viewportCornerRadius, (float) viewportCornerRadius, eraser);
+    }
 }

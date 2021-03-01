@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -33,6 +33,7 @@ public class CameraActivity extends Activity {
     private CameraPreview mPreview;
     private TextView mText;
     private ImageButton mFlashButton;
+    private int mCameraId;
 
     private final String[] flashModes = {Camera.Parameters.FLASH_MODE_ON, Camera.Parameters.FLASH_MODE_OFF};
     private int fmi = 1; // flash mode index
@@ -52,14 +53,16 @@ public class CameraActivity extends Activity {
         int height = Resources.getSystem().getDisplayMetrics().heightPixels;
         int transitionY = getTextPosition(width, height);
         mText.setText("Place the card inside the rectangular area");
-        mText.setTranslationY(transitionY);
+        mText.setTranslationY(100);
         mText.bringToFront();
 
-        mCamera = Camera.open();
+        int backCameraID = Util.getBackCameraId();
+        mCameraId = backCameraID;
 
-        Camera.Parameters params = mCamera.getParameters();
+        mCamera = Camera.open(backCameraID);
 
-        mPreview = new CameraPreview(this, mCamera);
+        mPreview = new CameraPreview(this, mCamera, backCameraID, this);
+        mPreview.setBackgroundColor(Color.parseColor("#7f000000"));
         mFrameLayout.addView(mPreview);
 
         mFlashButton.setOnClickListener(
@@ -107,9 +110,9 @@ public class CameraActivity extends Activity {
             if (mSaveUri != null) {
                 OutputStream outputStream = null;
                 try {
-                    double frameLayoutRatio = (double)mFrameLayout.getHeight() / (double)mFrameLayout.getWidth();
+                    int rotation = getPictureRotation(mCameraId);
                     Bitmap bitmap = Util.getBitMapfromByte(data);
-                    Bitmap cropmap = Util.centerCrop(bitmap, frameLayoutRatio);
+                    Bitmap cropmap = Util.centerCrop(bitmap, rotation);
                     byte[] cropdata = Util.getBytefromBitMap(cropmap);
                     outputStream = mContentResolver.openOutputStream(mSaveUri);
                     outputStream.write(cropdata);
@@ -163,5 +166,10 @@ public class CameraActivity extends Activity {
         }
     }
 
+    private int getPictureRotation(int cameraId) {
+        int deviceOrientation = Util.getDisplayOrientation(this);
+        int cameraOrientation = Util.getCameraOrientation(cameraId);
+        return Util.getCameraDisplayOrientation(deviceOrientation, cameraOrientation);
+    }
 
 }
