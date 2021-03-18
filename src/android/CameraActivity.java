@@ -14,13 +14,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.oraclecorp.internal.cxm.salescloud.R;
-
-import org.apache.cordova.LOG;
-
 import java.io.IOException;
 import java.io.OutputStream;
-
 
 public class CameraActivity extends Activity {
 
@@ -35,23 +30,30 @@ public class CameraActivity extends Activity {
     private ImageButton mFlashButton;
     private int mCameraId;
 
+    private String appResourcePackage;
+
     private final String[] flashModes = {Camera.Parameters.FLASH_MODE_ON, Camera.Parameters.FLASH_MODE_OFF};
     private int fmi = 1; // flash mode index
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContentResolver = getContentResolver();
-        setContentView(R.layout.activity_camera);
 
-        mFrameLayout = findViewById(R.id.camera_preview);
-        mText = findViewById(R.id.textOverlay);
-        mFlashButton = findViewById(R.id.btn_flash);
+        appResourcePackage = this.getPackageName();
+
+        setContentView(getResources().getIdentifier("activity_camera", "layout", appResourcePackage));
+
+        int cameraPreviewId = getResources().getIdentifier("camera_preview", "id", appResourcePackage);
+        int textOverlayId = getResources().getIdentifier("textOverlay", "id", appResourcePackage);
+        int buttonFlashId = getResources().getIdentifier("btn_flash", "id", appResourcePackage);
+
+        mFrameLayout = findViewById(cameraPreviewId);
+        mText = findViewById(textOverlayId);
+        mFlashButton = findViewById(buttonFlashId);
 
         int width = Resources.getSystem().getDisplayMetrics().widthPixels;
         int height = Resources.getSystem().getDisplayMetrics().heightPixels;
-        int transitionY = getTextPosition(width, height);
         mText.setText("Place the card inside the rectangular area");
         mText.setTranslationY(100);
         mText.bringToFront();
@@ -86,14 +88,15 @@ public class CameraActivity extends Activity {
 
     private void setFlashMode() {
         Camera.Parameters params = mCamera.getParameters();
-
+        int flashOnId = getResources().getIdentifier("flash_on", "drawable", appResourcePackage);
+        int flashOffId = getResources().getIdentifier("flash_off", "drawable", appResourcePackage);
         if (fmi == 1) {
             // flash off
             fmi = 0;
-            mFlashButton.setImageResource(R.drawable.flash_on);
+            mFlashButton.setImageResource(flashOnId);
         } else {
             fmi = 1;
-            mFlashButton.setImageResource(R.drawable.flash_off);
+            mFlashButton.setImageResource(flashOffId);
         }
 
         params.setFlashMode(flashModes[fmi]);

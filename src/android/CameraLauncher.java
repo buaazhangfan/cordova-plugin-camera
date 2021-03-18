@@ -41,8 +41,6 @@ import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Base64;
 
-import com.oraclecorp.internal.cxm.salescloud.MainActivity;
-
 import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
