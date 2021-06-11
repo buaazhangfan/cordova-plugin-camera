@@ -425,20 +425,22 @@ static NSString* toBase64(NSData* data) {
     
     if (options.cardScan) {
         image = [image imageByCropping];
-    }
-    
-    UIImage* scaledImage = nil;
+        
+        return image;
+    } else {
+        UIImage* scaledImage = nil;
 
-    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
-        // if cropToSize, resize image and crop to target size, otherwise resize to fit target without cropping
-        if (options.cropToSize) {
-            scaledImage = [image imageByScalingAndCroppingForSize:options.targetSize];
-        } else {
-            scaledImage = [image imageByScalingNotCroppingForSize:options.targetSize];
+        if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
+            // if cropToSize, resize image and crop to target size, otherwise resize to fit target without cropping
+            if (options.cropToSize) {
+                scaledImage = [image imageByScalingAndCroppingForSize:options.targetSize];
+            } else {
+                scaledImage = [image imageByScalingNotCroppingForSize:options.targetSize];
+            }
         }
+        
+        return (scaledImage == nil ? image : scaledImage);
     }
-    
-    return (scaledImage == nil ? image : scaledImage);
 }
 
 - (void)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info completion:(void (^)(CDVPluginResult* res))completion

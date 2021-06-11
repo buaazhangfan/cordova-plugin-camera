@@ -180,11 +180,25 @@
     CGFloat height = imageSize.height;
     CGFloat cropWidth = width * 3. / 4.;
     CGFloat cropHeight = cropWidth * 9. / 16.;
-    CGPoint center = CGPointMake(width / 2. - cropWidth / 2., height / 2. - cropHeight / 2.);
-    CGRect frame = CGRectMake(center.x, center.y, cropWidth, cropHeight);
-    CGImageRef imageRef = CGImageCreateWithImageInRect([sourceImage CGImage], frame);
-    newImage = [UIImage imageWithCGImage:imageRef];
-    CGImageRelease(imageRef);
+    CGPoint cropOrigin = CGPointMake(width / 2. - cropWidth / 2., height / 2. - cropHeight / 2.);
+    CGSize cropSize = CGSizeMake(cropWidth, cropHeight);
+    CGPoint thumbnailOrigin = CGPointMake(0.0, 0.0);
+    thumbnailOrigin.x = -cropOrigin.x;
+    thumbnailOrigin.y = -cropOrigin.y;
+    CGRect thumbnailRect = CGRectZero;
+    thumbnailRect.origin =thumbnailOrigin;
+    thumbnailRect.size.width = width;
+    thumbnailRect.size.height = height;
+    
+    UIGraphicsBeginImageContext(cropSize);
+    [sourceImage drawInRect:thumbnailRect];
+    newImage = UIGraphicsGetImageFromCurrentImageContext();
+    if (newImage == nil) {
+        NSLog(@"could not crop image");
+    }
+    
+    // pop the context to get back to the default
+    UIGraphicsEndImageContext();
     return newImage;
 }
 
